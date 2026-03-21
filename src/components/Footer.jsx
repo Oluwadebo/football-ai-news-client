@@ -2,45 +2,39 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Zap } from "lucide-react";
 
-export default function Footer() {
+const Footer = () => {
   return (
-    <footer className="bg-black py-5 mt-5 border-top border-secondary">
+    <footer className="bg-dark py-5 mt-5 border-top border-secondary">
       <div className="container text-center">
-        {/* Icon Logo */}
-        <div className="d-flex justify-content-center mb-4">
-          <div className="bg-success p-3 rounded-circle shadow-lg">
-            <Zap className="text-black" size={32} fill="currentColor" />
-          </div>
-        </div>
-
-        {/* Brand Name */}
-        <h3 className="fw-black text-uppercase italic tracking-tighter mb-4 text-white">
-          Pitch<span className="text-success">AI</span> News
-        </h3>
-
-        {/* Copyright */}
-        <p className="text-secondary small fw-bold text-uppercase tracking-widest mb-4">
-          © {new Date().getFullYear()} PitchAI News Network. Human-Quality AI
-          Journalism.
+        {/* Animated Icon Logo */}
+        <Zap className="text-success mb-3" size={32} fill="currentColor" />
+        <h2 className="fw-black italic text-uppercase text-success mb-3">
+          FOOTYAI
+        </h2>
+        {/* Copyright and Tagline */}
+        <p className="text-secondary small fw-bold text-uppercase tracking-widest">
+          © 2026 FootyAI News. All Rights Reserved.
         </p>
-
-        {/* Links */}
-        <div className="d-flex justify-content-center gap-4 small fw-bold text-uppercase tracking-widest opacity-50">
+        <p className="text-secondary x-small fw-bold text-uppercase tracking-widest opacity-75 mb-4">
+          Human-Quality AI Journalism
+        </p>
+        {/* Legal & Contact Links */}
+        <div className="d-flex justify-content-center gap-4 mt-3 small fw-bold text-uppercase tracking-widest opacity-50">
           <Link
             to="/"
-            className="text-white text-decoration-none hover-success"
+            className="text-white text-decoration-none hover-success transition-colors"
           >
             Privacy
           </Link>
           <Link
             to="/"
-            className="text-white text-decoration-none hover-success"
+            className="text-white text-decoration-none hover-success transition-colors"
           >
             Terms
           </Link>
           <Link
             to="/"
-            className="text-white text-decoration-none hover-success"
+            className="text-white text-decoration-none hover-success transition-colors"
           >
             Contact
           </Link>
@@ -48,4 +42,6 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

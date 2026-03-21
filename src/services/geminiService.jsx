@@ -1,76 +1,43 @@
-import { GoogleGenAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Using Vite's environment variable syntax
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-const genAI = new GoogleGenAI(apiKey);
+// Initialize the API (usually handled via an environment variable)
+const genAI = new GoogleGenerativeAI("YOUR_API_KEY_HERE");
 
+/**
+ * Generates a full sports article based on raw news data.
+ */
 export const generateArticle = async (newsItem) => {
-  // Logic to force variety in the "Hook System"
-  const hooks = [
-    "Breaking news",
-    "Suspense",
-    "Question",
-    "Narrative",
-    "Statistic",
-    "Fan reaction",
-  ];
-  const selectedHook = hooks[Math.floor(Math.random() * hooks.length)];
-
-  const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash", // Using the stable flash model
-  });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `
-    Build a professional sports journalism article based on this news: "${newsItem.title} - ${newsItem.content}".
+    You are a world-class football journalist for a high-end digital news network.
+    Transform the following raw news into a professional, engaging article.
     
-    MANDATORY HOOK SYSTEM:
-    Use a ${selectedHook.toUpperCase()} hook for the first 1-2 sentences.
-    
-    ARTICLE STRUCTURE:
-    1. ${selectedHook} introduction
-    2. News explanation
-    3. Player or club background
-    4. Tactical or competition impact
-    5. Future implications
-    6. Short summary conclusion
-    
-    LENGTH: 600-900 words.
-    STYLE: Vary sentence length, avoid repetitive AI language. Write like Fabrizio Romano.
-    
-    OUTPUT FORMAT: JSON
-    {
-      "title": "Catchy headline",
-      "content": "Full article body with paragraphs",
-      "player": "Main player name",
-      "club": "Main club name",
-      "eventType": "e.g., Transfer, Match, Injury",
-      "summary": "1-sentence summary for notifications",
-      "tags": ["tag1", "tag2"]
-    }
+    RAW NEWS: ${newsItem.content}
+    TITLE: ${newsItem.title}
+
+    REQUIREMENTS:
+    1. Tone: Bold, authoritative, and slightly aggressive (like a sports tabloid).
+    2. Format: Return JSON with:
+       - title: A punchy, uppercase-style headline.
+       - summary: A 2-sentence hook.
+       - content: A 4-paragraph detailed report.
+       - tags: 3 relevant keywords (e.g., "Transfer", "Premier League", "Injury").
+       - eventType: One of [match, transfer, club, rumors].
   `;
 
-  const result = await model.generateContent({
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: {
-      responseMimeType: "application/json",
-    },
-  });
-
+  const result = await model.generateContent(prompt);
   const response = await result.response;
   return JSON.parse(response.text());
 };
 
-export const generateFeaturedImage = async (article) => {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Placeholder for image logic if supported via your specific tier
-  const prompt = `Football news graphic style for ${article.player} at ${article.club}. Professional sports journalism aesthetic, high quality, dynamic action. No text.`;
-
-  try {
-    const result = await model.generateContent(prompt);
-    // Note: If using a text-to-image specific endpoint, logic would change here.
-    // Falling back to your robust placeholder logic for stability:
-    return `https://picsum.photos/seed/${encodeURIComponent(article.title)}/1200/675`;
-  } catch (e) {
-    console.error("Image generation failed, using placeholder", e);
-    return `https://picsum.photos/seed/${encodeURIComponent(article.title)}/1200/675`;
-  }
+/**
+ * Generates a placeholder image URL based on article context.
+ * Note: Since Gemini text models don't "output" images directly, 
+ * this service constructs a query for a high-quality stock source.
+ */
+export const generateFeaturedImage = (title, type) => {
+  const query = encodeURIComponent(`${title} football soccer stadium professional`);
+  // Using a high-quality seed-based source for the demo
+  return `https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop`;
 };

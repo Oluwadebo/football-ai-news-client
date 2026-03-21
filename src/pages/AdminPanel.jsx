@@ -1,164 +1,211 @@
 import React from "react";
 import {
-  Settings,
-  Bell,
+  TrendingUp,
   Trash2,
   RefreshCw,
-  Plus,
-  CheckCircle,
-  AlertCircle,
+  Bell,
   Zap,
   ExternalLink,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { format } from "date-fns";
 
-export default function AdminPanel({
-  pendingNews,
-  articles,
-  settings,
-  onToggleAutomation,
+const AdminPanel = ({
+  articles = [],
+  pendingNews = [],
+  notifications = [],
+  settings = { autoMode: false },
   onDelete,
+  onToggleAutomation,
   onRefreshDiscovery,
   isProcessing,
-}) {
+}) => {
+  // Safety wrapper for formatting dates to prevent "Invalid Date" crashes
+  const safeFormat = (dateString) => {
+    try {
+      return dateString ? format(new Date(dateString), "HH:mm") : "--:--";
+    } catch (e) {
+      return "00:00";
+    }
+  };
+
   return (
     <div className="container py-5">
-      {/* Header & Automation Toggle */}
-      <div className="d-flex justify-content-between align-items-center mb-5 border-bottom border-secondary pb-4">
+      {/* --- HEADER & CONTROLS --- */}
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
         <div>
-          <h1 className="fw-black text-uppercase italic tracking-tighter mb-1">
-            Control <span className="text-success">Center</span>
+          <h1 className="display-4 fw-black text-uppercase italic tracking-tighter mb-1">
+            Admin Automation <span className="text-success">CENTER</span>
           </h1>
-          <p className="text-secondary small fw-bold text-uppercase tracking-widest mb-0">
+          {/* Pulse animation applied when isProcessing is true */}
+          <p
+            className={`text-uppercase fw-bold tracking-widest small mb-0 ${isProcessing ? "status-active" : "text-secondary"}`}
+          >
             System Status:{" "}
-            <span
-              className={
-                settings.automationEnabled ? "text-success" : "text-danger"
-              }
-            >
-              {settings.automationEnabled ? "FULLY AUTOMATED" : "PAUSED"}
-            </span>
+            {isProcessing ? "SCANNING SATELLITE FEEDS..." : "IDLE"}
           </p>
         </div>
-        <div className="form-check form-switch bg-dark p-3 border border-secondary">
-          <label className="form-check-label me-5 fw-black text-uppercase small">
-            Auto-Publish
-          </label>
-          <input
-            className="form-check-input ms-0"
-            type="checkbox"
-            checked={settings.automationEnabled}
-            onChange={(e) => onToggleAutomation(e.target.checked)}
-          />
+
+        <div className="d-flex gap-3">
+          <button
+            onClick={onRefreshDiscovery}
+            disabled={isProcessing}
+            className="btn btn-outline-secondary rounded-0 fw-black text-uppercase px-4 d-flex align-items-center gap-2"
+          >
+            <RefreshCw
+              size={18}
+              className={isProcessing ? "animate-spin" : ""}
+            />
+            Refresh Queue
+          </button>
+          <button
+            onClick={onToggleAutomation}
+            className={`btn ${settings.autoMode ? "btn-success text-black" : "btn-outline-success"} rounded-0 fw-black text-uppercase px-4 d-flex align-items-center gap-2`}
+          >
+            <Zap size={18} fill={settings.autoMode ? "currentColor" : "none"} />
+            {settings.autoMode ? "AUTOMATION ON" : "ENABLE AUTO"}
+          </button>
         </div>
       </div>
 
       <div className="row g-4">
-        {/* News Discovery Queue */}
+        {/* --- LEFT COLUMN: PENDING QUEUE --- */}
         <div className="col-lg-8">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h3 className="fw-black text-uppercase italic tracking-tighter mb-0">
-              Trend <span className="text-success">Queue</span>
-            </h3>
-            <button
-              onClick={onRefreshDiscovery}
-              className="btn btn-outline-secondary btn-sm rounded-0"
-            >
-              <RefreshCw
-                size={14}
-                className={`me-2 ${isProcessing ? "spin" : ""}`}
-              />
-              Scan Sources
-            </button>
-          </div>
+          <div className="bg-dark border border-secondary p-4 h-100">
+            <div className="d-flex align-items-center gap-2 mb-4">
+              <TrendingUp className="text-success" size={20} />
+              <h3 className="fw-black text-uppercase italic mb-0 h4">
+                Intelligence Queue
+              </h3>
+            </div>
 
-          <div className="list-group gap-3">
-            <AnimatePresence>
-              {pendingNews.map((news) => (
-                <motion.div
-                  key={news.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="list-group-item bg-dark border-secondary p-4 rounded-0"
-                >
-                  <div className="d-flex justify-content-between">
-                    <div className="flex-grow-1">
-                      <div className="d-flex align-items-center gap-2 mb-2">
+            <div className="table-responsive">
+              <table className="table table-dark table-hover align-middle">
+                <thead>
+                  <tr className="text-secondary x-small fw-black text-uppercase tracking-widest border-bottom border-secondary">
+                    <th>Source</th>
+                    <th>News Title</th>
+                    <th className="text-center">Score</th>
+                    <th className="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingNews?.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="border-bottom border-secondary-subtle"
+                    >
+                      <td className="small fw-bold text-success">
+                        {item.source}
+                      </td>
+                      <td>
+                        <div className="fw-bold text-uppercase small">
+                          {item.title}
+                        </div>
+                        <div className="x-small text-secondary">
+                          {safeFormat(item.discoveredAt)} • {item.status}
+                        </div>
+                      </td>
+                      <td className="text-center">
                         <span
-                          className={`badge ${news.score >= 4 ? "bg-success" : "bg-warning"} text-black fw-black rounded-0`}
+                          className={`badge rounded-0 ${item.score > 80 ? "bg-danger" : "bg-secondary"}`}
                         >
-                          SCORE: +{news.score}
+                          {item.score}
                         </span>
-                        <span className="text-secondary x-small fw-bold text-uppercase">
-                          {news.source}
-                        </span>
-                      </div>
-                      <h5 className="fw-bold text-white mb-2">{news.title}</h5>
-                      <p className="text-secondary small mb-0">
-                        {news.content.substring(0, 120)}...
-                      </p>
-                    </div>
-                    <div className="d-flex flex-column gap-2 ms-4">
-                      <button className="btn btn-success btn-sm rounded-0 text-black fw-black">
-                        <Plus size={16} />
-                      </button>
-                      <button
-                        onClick={() => onDelete(news.id)}
-                        className="btn btn-outline-danger btn-sm rounded-0"
+                      </td>
+                      <td className="text-end">
+                        <button className="btn btn-link text-white p-0 me-2">
+                          <ExternalLink size={16} />
+                        </button>
+                        <button className="btn btn-link text-danger p-0">
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {pendingNews.length === 0 && !isProcessing && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="text-center py-5 text-secondary fw-bold text-uppercase"
                       >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                        Queue is empty. Scanning for news...
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        {/* System Logs & Stats */}
+        {/* --- RIGHT COLUMN: IMPACT ALERTS --- */}
         <div className="col-lg-4">
-          <div className="bg-dark border border-secondary p-4 mb-4">
-            <h4 className="fw-black text-uppercase italic tracking-tighter mb-4 border-bottom border-secondary pb-2">
-              Live <span className="text-success">Stats</span>
-            </h4>
-            <div className="d-flex justify-content-between mb-3">
-              <span className="text-secondary small fw-bold">
-                PUBLISHED ARTICLES
-              </span>
-              <span className="fw-black">{articles.length}</span>
-            </div>
-            <div className="d-flex justify-content-between mb-3">
-              <span className="text-secondary small fw-bold">
-                AI GENERATIONS (24H)
-              </span>
-              <span className="fw-black text-success">12</span>
-            </div>
-            <div className="d-flex justify-content-between">
-              <span className="text-secondary small fw-bold">API STATUS</span>
-              <span className="text-success fw-black small">HEALTHY</span>
-            </div>
-          </div>
-
           <div className="bg-dark border border-secondary p-4">
-            <h4 className="fw-black text-uppercase italic tracking-tighter mb-4 border-bottom border-secondary pb-2">
-              Recent <span className="text-success">Activity</span>
-            </h4>
-            <div className="small fw-bold text-uppercase tracking-widest text-secondary">
-              <p className="mb-2 border-start border-success ps-2 py-1 bg-black bg-opacity-50">
-                [16:05] AI Rewriting "Mbappe Transfer..."
-              </p>
-              <p className="mb-2 border-start border-secondary ps-2 py-1">
-                [15:40] Scanned 12 RSS feeds
-              </p>
-              <p className="mb-0 border-start border-success ps-2 py-1 bg-black bg-opacity-50">
-                [15:10] Image Gen successful for "Arteta Interview"
-              </p>
+            <div className="d-flex align-items-center gap-2 mb-4">
+              <Bell className="text-success" size={20} />
+              <h3 className="fw-black text-uppercase italic mb-0 h4">
+                Impact Alerts
+              </h3>
+            </div>
+
+            <div className="d-flex flex-column gap-3">
+              {notifications?.map((note) => (
+                <div
+                  key={note.id}
+                  className="p-3 border-start border-success bg-black border-2"
+                >
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className="x-small fw-black text-success text-uppercase tracking-widest">
+                      {note.player}
+                    </span>
+                    <span className="x-small text-secondary">
+                      {note.timestamp}
+                    </span>
+                  </div>
+                  <h6 className="fw-black text-uppercase small mb-2">
+                    {note.title}
+                  </h6>
+                  <p
+                    className="x-small text-secondary mb-0"
+                    style={{ lineHeight: "1.4" }}
+                  >
+                    {note.explanation}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* --- RECENTLY PUBLISHED (Live Articles) --- */}
+      <div className="mt-5">
+        <h3 className="fw-black text-uppercase italic mb-4">Live Database</h3>
+        <div className="row g-3">
+          {(articles || []).slice(0, 4).map((article) => (
+            <div key={article.id} className="col-md-3">
+              <div className="bg-dark p-3 border border-secondary d-flex justify-content-between align-items-center h-100">
+                <div className="text-truncate me-2">
+                  <div className="fw-bold text-uppercase x-small text-truncate">
+                    {article.title}
+                  </div>
+                  <div className="x-small text-secondary">
+                    ID: {article.id?.toString().slice(0, 8)}
+                  </div>
+                </div>
+                <button
+                  onClick={() => onDelete(article.id)}
+                  className="btn btn-link text-danger p-0"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default AdminPanel;

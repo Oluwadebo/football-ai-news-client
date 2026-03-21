@@ -83,3 +83,67 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+/* src/index.css */
+
+/* Fixes the sticky navbar covering the top of the article when scrolling */
+html {
+  scroll-padding-top: 100px;
+}
+
+/* Custom Pulse Animation for the Trending Badge */
+@keyframes pulse-glow {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+.animate-pulse {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Smooth internal scroll for the whole app */
+body {
+  scroll-behavior: smooth;
+}
+
+@layer utilities {
+  /* Match the exact reference green */
+  .text-success { color: #198754 !important; }
+  .bg-success { background-color: #198754 !important; }
+  
+  /* Brutalist Typography */
+  .fw-black { font-weight: 900; }
+  .italic { font-style: italic; }
+  .tracking-tighter { letter-spacing: -0.05em; }
+  .tracking-widest { letter-spacing: 0.1em; }
+  .uppercase { text-transform: uppercase; }
+  
+  /* Custom font sizes from the reference */
+  .x-small { font-size: 10px; }
+  
+  /* Input Placeholder styling */
+  .placeholder-dark::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+    font-weight: 700;
+  }
+}
+@keyframes pulse-green {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+.status-active {
+  animation: pulse-green 2s infinite;
+  color: #198754 !important; /* Bootstrap success color */
+}
+
+/* For the spinning refresh icon */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

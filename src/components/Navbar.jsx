@@ -1,74 +1,126 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Newspaper, Menu, X, LayoutDashboard, Search } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Zap, Menu, X } from "lucide-react";
 
-export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
-  const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "Transfers", path: "/category/transfer" },
-    { name: "Match News", path: "/category/match" },
-    { name: "Club News", path: "/category/club-news" },
-  ];
+  // Close mobile menu automatically when the route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location]);
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary sticky-top py-3">
+    <nav
+      className="bg-black text-white sticky-top border-bottom border-secondary py-4"
+      style={{ zIndex: 1050 }}
+    >
       <div className="container">
-        {/* Logo */}
-        <Link to="/" className="navbar-brand d-flex align-items-center gap-2">
-          <div className="bg-success p-2 rounded-circle d-flex align-items-center justify-content-center">
-            <Newspaper size={24} className="text-black" />
-          </div>
-          <span className="fw-black text-uppercase italic tracking-tighter fs-4">
-            Pitch<span className="text-success">AI</span>
-          </span>
-        </Link>
-
-        {/* Mobile Toggle */}
-        <button
-          className="navbar-toggler border-0"
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <X size={28} /> : <Menu size={28} />}
-        </button>
-
-        {/* Links */}
-        <div className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}>
-          <ul className="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-4">
-            {navLinks.map((link) => (
-              <li key={link.name} className="nav-item">
-                <Link
-                  to={link.path}
-                  className={`nav-link fw-bold text-uppercase tracking-widest small ${
-                    location.pathname === link.path
-                      ? "text-success"
-                      : "text-white"
-                  }`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-
-          <div className="d-flex align-items-center gap-3">
-            <button className="btn text-white p-0">
-              <Search size={20} />
-            </button>
-            <Link
-              to="/admin"
-              className="btn btn-outline-success btn-sm rounded-0 fw-black text-uppercase px-3"
+        <div className="d-flex align-items-center justify-content-between">
+          {/* Logo / Brand */}
+          <Link
+            to="/"
+            className="d-flex align-items-center gap-2 text-decoration-none"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <div
+              className="bg-success p-2 rounded-1 d-flex align-items-center justify-content-center"
+              style={{ width: "40px", height: "40px" }}
             >
-              <LayoutDashboard size={16} className="me-2" />
-              Admin
+              <Zap className="text-black fill-current" size={24} />
+            </div>
+            <span
+              className="fw-black text-uppercase italic h3 mb-0 tracking-tighter"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              FOOTYAI
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="d-none d-lg-flex align-items-center gap-4">
+            <Link
+              to="/category/transfer"
+              className="text-white text-decoration-none text-uppercase fw-bold small tracking-widest hover-success"
+            >
+              Transfers
+            </Link>
+            <Link
+              to="/category/match"
+              className="text-white text-decoration-none text-uppercase fw-bold small tracking-widest hover-success"
+            >
+              Match News
+            </Link>
+            <Link
+              to="/category/club"
+              className="text-white text-decoration-none text-uppercase fw-bold small tracking-widest hover-success"
+            >
+              Club News
+            </Link>
+            <Link
+              to="/category/rumors"
+              className="text-white text-decoration-none text-uppercase fw-bold small tracking-widest hover-success"
+            >
+              Rumors
             </Link>
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="btn btn-link text-white p-0 d-lg-none border-0 shadow-none"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={32} /> : <Menu size={32} />}
+          </button>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden d-lg-none"
+            >
+              <div className="pt-4 pb-2 d-flex flex-column gap-3">
+                <Link
+                  to="/category/transfer"
+                  className="text-white text-decoration-none text-uppercase fw-black h4 italic"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Transfers
+                </Link>
+                <Link
+                  to="/category/match"
+                  className="text-white text-decoration-none text-uppercase fw-black h4 italic"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Match News
+                </Link>
+                <Link
+                  to="/category/club"
+                  className="text-white text-decoration-none text-uppercase fw-black h4 italic"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Club News
+                </Link>
+                <Link
+                  to="/category/rumors"
+                  className="text-white text-decoration-none text-uppercase fw-black h4 italic"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Rumors
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   );
-}
+};
+
+export default Navbar;

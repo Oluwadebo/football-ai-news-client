@@ -1,132 +1,149 @@
 import React, { useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Tag, Share2, Clock } from "lucide-react";
-import { motion, useScroll, useSpring } from "motion/react";
+import { Link, useParams } from "react-router-dom";
+import { Share2, Tag } from "lucide-react";
 import { format } from "date-fns";
+import ArticleCard from "../components/common/ArticleCard"; // Adjusted path to your new folders
 
-export default function ArticlePage({ articles }) {
+const ArticlePage = ({ articles }) => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const article = articles.find((a) => a.id === id);
 
-  // Reading progress bar logic
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
+  // Defensive check: If articles isn't an array yet, don't crash
+  const article = articles?.find((a) => a.id === id);
+  const related = articles?.filter((a) => a.id !== id).slice(0, 3);
 
-  // Scroll to top on load
+  // Simplified image error handler for JavaScript
+  const handleImageError = (e, articleId) => {
+    const target = e.target;
+    if (!target.src.includes("picsum.photos")) {
+      target.src = `https://picsum.photos/seed/${articleId}/1200/675`;
+    }
+  };
+
+  // Scroll to top when page loads
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
   if (!article) {
     return (
-      <div className="container py-5 text-center">
-        <h2 className="fw-black text-uppercase italic">Article Not Found</h2>
-        <button
-          onClick={() => navigate("/")}
-          className="btn btn-success rounded-0 mt-4"
-        >
-          Return Home
-        </button>
+      <div className="container py-5 text-center bg-black text-white min-vh-100">
+        <h2 className="display-1 fw-black">404</h2>
+        <p className="text-secondary fw-bold text-uppercase tracking-widest">
+          Article not found
+        </p>
+        <Link to="/" className="btn btn-outline-success mt-4">
+          BACK TO FEED
+        </Link>
       </div>
     );
   }
 
-  // Estimate reading time (Average 200 words per minute)
-  const readingTime = Math.ceil(article.content.split(" ").length / 200);
-
   return (
-    <div className="bg-black min-vh-100 pb-5">
-      {/* Progress Bar */}
-      <motion.div
-        className="position-fixed top-0 start-0 end-0 bg-success z-3"
-        style={{ height: "4px", scaleX, transformOrigin: "0%" }}
-      />
-
-      {/* Hero Header */}
-      <header className="container py-5">
-        <button
-          onClick={() => navigate(-1)}
-          className="btn text-secondary p-0 mb-4 d-flex align-items-center gap-2 hover-success"
-        >
-          <ArrowLeft size={20} />{" "}
-          <span className="fw-bold text-uppercase small">Back to Feed</span>
-        </button>
-
-        <div className="row g-4 align-items-end">
-          <div className="col-lg-8">
-            <div className="d-flex gap-3 mb-3">
-              <span className="badge bg-success text-black fw-black text-uppercase rounded-0 px-3 py-2">
-                {article.eventType}
-              </span>
-              <div className="text-secondary d-flex align-items-center gap-2 small fw-bold">
-                <Clock size={16} /> {readingTime} MIN READ
-              </div>
-            </div>
-            <h1 className="display-4 fw-black text-uppercase italic tracking-tighter lh-1 mb-4">
-              {article.title}
-            </h1>
-            <div className="d-flex align-items-center gap-4 text-secondary small fw-bold text-uppercase tracking-widest">
-              <span className="d-flex align-items-center gap-2">
-                <Calendar size={16} />{" "}
-                {format(new Date(article.publishedAt), "MMMM dd, yyyy")}
-              </span>
-              <span>By PitchAI News Bot</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Featured Image */}
-      <div className="container mb-5">
-        <div className="ratio ratio-21x9 overflow-hidden border border-secondary border-opacity-25">
-          <img
-            src={article.imageUrl}
-            alt={article.title}
-            className="object-fit-cover shadow-lg"
-          />
-        </div>
-      </div>
-
-      {/* Article Content */}
-      <article className="container">
+    <div className="bg-black text-white min-vh-100">
+      <div className="container py-5">
         <div className="row justify-content-center">
-          <div className="col-lg-8">
-            <div
-              className="article-body fs-5 text-white-50 lh-lg"
-              style={{
-                whiteSpace: "pre-wrap",
-                fontFamily: "'Inter', sans-serif",
-              }}
+          <div className="col-lg-10">
+            {/* Navigation Back Link */}
+            <Link
+              to="/"
+              className="text-success text-decoration-none fw-black text-uppercase small tracking-widest mb-5 d-inline-block"
             >
-              {/* This renders the 600-900 word text perfectly */}
-              {article.content}
-            </div>
+              &larr; BACK TO FEED
+            </Link>
 
-            {/* Tags & Sharing */}
-            <hr className="my-5 border-secondary border-opacity-25" />
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-4">
-              <div className="d-flex gap-2">
+            <header className="mb-5">
+              <div className="mb-4">
                 {article.tags?.map((tag) => (
                   <span
                     key={tag}
-                    className="badge border border-secondary text-secondary rounded-0 px-3 py-2"
+                    className="text-success fw-black text-uppercase small tracking-widest me-3"
                   >
-                    <Tag size={12} className="me-2" /> {tag}
+                    {tag}
                   </span>
                 ))}
               </div>
-              <button className="btn btn-outline-secondary rounded-0 d-flex align-items-center gap-2 px-4 py-2 hover-success">
-                <Share2 size={18} /> Share News
-              </button>
+              <h1
+                className="display-2 fw-black text-uppercase italic mb-4 tracking-tighter"
+                style={{ fontFamily: "'Anton', sans-serif", lineHeight: "0.9" }}
+              >
+                {article.title}
+              </h1>
+              <div className="d-flex align-items-center gap-4 text-secondary small fw-bold text-uppercase tracking-widest border-top border-secondary pt-4">
+                <span>
+                  {article.publishedAt
+                    ? format(new Date(article.publishedAt), "MMMM dd, yyyy")
+                    : "Today"}
+                </span>
+                <span className="text-success">•</span>
+                <span>{article.eventType || "Analysis"}</span>
+              </div>
+            </header>
+
+            {/* Featured Hero Image */}
+            <div className="position-relative mb-5">
+              <img
+                src={
+                  article.imageUrl ||
+                  `https://picsum.photos/seed/${article.id}/1200/675`
+                }
+                className="img-fluid w-100 object-fit-cover shadow-lg"
+                style={{ maxHeight: "600px" }}
+                alt={article.title}
+                referrerPolicy="no-referrer"
+                onError={(e) => handleImageError(e, article.id)}
+              />
+              <div className="position-absolute bottom-0 start-0 bg-success text-black fw-black text-uppercase px-3 py-2 small m-4">
+                Exclusive Coverage
+              </div>
             </div>
+
+            <div className="row justify-content-center">
+              <div className="col-lg-9">
+                {/* Main Article Content */}
+                <div
+                  className="article-content fs-4 text-light opacity-90 mb-5"
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    lineHeight: "1.6",
+                    fontFamily: "'Inter', sans-serif",
+                  }}
+                >
+                  {article.content}
+                </div>
+
+                {/* Interaction Buttons */}
+                <div className="d-flex gap-3 mb-5">
+                  <button className="btn btn-outline-secondary rounded-0 flex-grow-1 fw-black text-uppercase small py-3">
+                    <Share2 size={18} className="me-2" /> Share
+                  </button>
+                  <button className="btn btn-outline-secondary rounded-0 flex-grow-1 fw-black text-uppercase small py-3">
+                    <Tag size={18} className="me-2" /> Save
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <hr className="border-secondary my-5" />
+
+            {/* Related Stories Section */}
+            <section>
+              <h2
+                className="display-6 fw-black text-uppercase italic mb-5 tracking-tighter"
+                style={{ fontFamily: "'Anton', sans-serif" }}
+              >
+                Related <span className="text-success">Stories</span>
+              </h2>
+              <div className="row">
+                {related?.map((a) => (
+                  <ArticleCard key={a.id} article={a} />
+                ))}
+              </div>
+            </section>
           </div>
         </div>
-      </article>
+      </div>
     </div>
   );
-}
+};
+
+export default ArticlePage;
