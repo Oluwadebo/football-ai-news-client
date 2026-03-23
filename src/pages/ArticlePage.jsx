@@ -1,15 +1,23 @@
-import React, { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
-import { Share2, Tag } from "lucide-react";
 import { format } from "date-fns";
-import ArticleCard from "../components/common/ArticleCard"; // Adjusted path to your new folders
+import { Share2, Tag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import ArticleCard from "../components/common/ArticleCard";
 
 const ArticlePage = ({ articles }) => {
   const { id } = useParams();
-
+  const [article, setArticle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const related = articles
+    ?.filter((a) => a.id !== id && a._id !== id)
+    .slice(0, 3);
   // Defensive check: If articles isn't an array yet, don't crash
-  const article = articles?.find((a) => a.id === id);
-  const related = articles?.filter((a) => a.id !== id).slice(0, 3);
+  // const article = articles?.find((a) => a.id === id);
+  // const related = articles?.filter((a) => a.id !== id).slice(0, 3);
+  // const found = articles?.find((a) => a.id === id || a._id === id);
+  // const related = articles
+  //   ?.filter((a) => a.id !== id && a._id !== id)
+  //   .slice(0, 3);
 
   // Simplified image error handler for JavaScript
   const handleImageError = (e, articleId) => {
@@ -20,9 +28,35 @@ const ArticlePage = ({ articles }) => {
   };
 
   // Scroll to top when page loads
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
+ useEffect(() => {
+   const found = articles?.find((a) => a.id === id || a._id === id);
+
+   if (found) {
+     setArticle(found);
+     setLoading(false);
+   } else {
+     // If not in state, fetch directly from API
+     fetch(`http://localhost:5000/api/articles/${id}`)
+       .then((res) => res.json())
+       .then((data) => {
+         if (data.error) throw new Error();
+         setArticle(data);
+         setLoading(false);
+       })
+       .catch(() => setLoading(false));
+   }
+   window.scrollTo(0, 0);
+ }, [id, articles]);
+  // useEffect(() => {
+  //   window.scrollTo(0, 0);
+  // }, [id]);
+
+  if (loading)
+    return (
+      <div className="container py-5 text-center">
+        <h1>Scanning Intelligence...</h1>
+      </div>
+    );
 
   if (!article) {
     return (

@@ -45,11 +45,18 @@ export default function Home({ articles = [] }) {
   const currentLeague =
     leagueData.find((l) => l.name === selectedLeague) || leagueData[0];
 
+  const activeLeague = leagueData.find((l) => l.name === selectedLeague);
+
   // 2. ARTICLE FILTERING
   const filteredUpdates = articles.filter((a) => {
     if (activeTab === "all") return true;
     return a.eventType.toLowerCase().includes(activeTab.toLowerCase());
   });
+
+  const filteredTeams =
+    activeLeague?.teams.filter((team) =>
+      team.name.toLowerCase().includes(leagueSearch.toLowerCase()),
+    ) || [];
 
   if (!articles || !Array.isArray(articles)) return null;
 
@@ -135,10 +142,10 @@ export default function Home({ articles = [] }) {
       </section>
 
       {/* --- MAIN CONTENT GRID --- */}
-      <div className="container py-5">
-        <div className="row g-5">
+      <div className="container py-4">
+        <div className="row g-4">
           {/* Left Column: Feed */}
-          <div className="col-lg-8">
+          <div className="col-12 col-lg-8">
             {/* Header with Category Tabs */}
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 gap-3">
               <h2
@@ -165,9 +172,9 @@ export default function Home({ articles = [] }) {
               </div>
             </div>
 
-            <div className="row g-4">
+            <div className="row g-3">
               {filteredUpdates.length > 0 ? (
-                filteredUpdates.map((article) => (
+                filteredUpdates.slice(0, 6).map((article) => (
                   <div key={article.id} className="col-md-4">
                     <ArticleCard article={article} />
                   </div>
@@ -175,25 +182,29 @@ export default function Home({ articles = [] }) {
               ) : (
                 <div className="col-12 text-center py-5 border border-secondary border-dashed">
                   <p className="text-secondary fw-bold text-uppercase tracking-widest mb-0">
-                    No active reports for this sector
+                    No {activeTab} news yet <br /> Check back soon or try
+                    another tab
                   </p>
                 </div>
               )}
             </div>
-          </div>
-          {/* Bottom of Left Column Feed */}
-          <div className="mt-5 text-center">
-            <Link
-              to="/news"
-              className="btn btn-outline-success rounded-0 px-5 py-3 text-uppercase fw-black italic tracking-widest w-50 transition-all hover-bg-success hover-text-black"
-              style={{ fontFamily: "'Anton', sans-serif", borderWidth: "2px" }}
-            >
-              load more News
-            </Link>
+            {/* Bottom of Left Column Feed */}
+            <div className="mt-5 text-center">
+              <Link
+                to="/news"
+                className="btn btn-outline-success rounded-0 px-5 py-3 text-uppercase fw-black italic tracking-widest w-50 transition-all hover-bg-success hover-text-black"
+                style={{
+                  fontFamily: "'Anton', sans-serif",
+                  borderWidth: "2px",
+                }}
+              >
+                load more News
+              </Link>
+            </div>
           </div>
 
           {/* Right Column: Sidebar */}
-          <div className="col-lg-4">
+          <div className="col-12 col-lg-4">
             {/* League Table Mock */}
             <div className="card bg-dark border-0 rounded-0 mb-5 overflow-hidden shadow-lg">
               <div className="card-header bg-success border-0 py-3 px-4">

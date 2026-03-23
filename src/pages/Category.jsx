@@ -6,14 +6,28 @@ const CategoryPage = ({ articles }) => {
   const { category } = useParams();
 
   // Updated filter logic to be more flexible (e.g., "club" matches "club-news")
-  const filteredArticles = articles.filter((article) => {
+  // const filteredArticles = articles.filter((article) => {
+  //   const categoryLower = category?.toLowerCase();
+  //   const eventTypeLower = article.eventType?.toLowerCase() || "";
+
+  //   return (
+  //     eventTypeLower === categoryLower ||
+  //     eventTypeLower.includes(categoryLower) || // This allows "club" to match "club-news"
+  //     article.tags?.some((tag) => tag.toLowerCase() === categoryLower)
+  //   );
+  // });
+  const filteredArticles = (articles || []).filter((article) => {
     const categoryLower = category?.toLowerCase();
-    const eventTypeLower = article.eventType.toLowerCase();
+    // Check eventType, tags, and title for the category keyword
+    const type = article.eventType?.toLowerCase() || "";
+    const tags = article.tags?.map((t) => t.toLowerCase()) || [];
+    const title = article.title?.toLowerCase() || "";
 
     return (
-      eventTypeLower === categoryLower ||
-      eventTypeLower.includes(categoryLower) || // This allows "club" to match "club-news"
-      article.tags.some((tag) => tag.toLowerCase() === categoryLower)
+      type === categoryLower ||
+      type.includes(categoryLower) ||
+      tags.includes(categoryLower) ||
+      title.includes(categoryLower)
     );
   });
 
