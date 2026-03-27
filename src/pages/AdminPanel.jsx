@@ -1,3 +1,4 @@
+// src/pages/AdminPanel.jsx
 import React from "react";
 import {
   TrendingUp,
@@ -12,36 +13,31 @@ import { format } from "date-fns";
 const AdminPanel = ({
   articles = [],
   pendingNews = [],
-  notifications = [],
-  settings = { autoMode: false },
+  settings = { automationEnabled: false },
   onDelete,
   onToggleAutomation,
   onRefreshDiscovery,
   isProcessing,
 }) => {
-  // Safety wrapper for formatting dates to prevent "Invalid Date" crashes
   const safeFormat = (dateString) => {
     try {
       return dateString ? format(new Date(dateString), "HH:mm") : "--:--";
-    } catch (e) {
+    } catch {
       return "00:00";
     }
   };
 
   return (
     <div className="container py-5">
-      {/* --- HEADER & CONTROLS --- */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
         <div>
           <h1 className="display-4 fw-black text-uppercase italic tracking-tighter mb-1">
             Admin Automation <span className="text-success">CENTER</span>
           </h1>
-          {/* Pulse animation applied when isProcessing is true */}
           <p
             className={`text-uppercase fw-bold tracking-widest small mb-0 ${isProcessing ? "status-active" : "text-secondary"}`}
           >
-            System Status:{" "}
-            {isProcessing ? "SCANNING SATELLITE FEEDS..." : "IDLE"}
+            System Status: {isProcessing ? "SCANNING..." : "IDLE"}
           </p>
         </div>
 
@@ -58,17 +54,20 @@ const AdminPanel = ({
             Refresh Queue
           </button>
           <button
-            onClick={onToggleAutomation}
-            className={`btn ${settings.autoMode ? "btn-success text-black" : "btn-outline-success"} rounded-0 fw-black text-uppercase px-4 d-flex align-items-center gap-2`}
+            onClick={() => onToggleAutomation(!settings.automationEnabled)}
+            className={`btn ${settings.automationEnabled ? "btn-success text-black" : "btn-outline-success"} rounded-0 fw-black text-uppercase px-4 d-flex align-items-center gap-2`}
           >
-            <Zap size={18} fill={settings.autoMode ? "currentColor" : "none"} />
-            {settings.autoMode ? "AUTOMATION ON" : "ENABLE AUTO"}
+            <Zap
+              size={18}
+              fill={settings.automationEnabled ? "currentColor" : "none"}
+            />
+            {settings.automationEnabled ? "AUTOMATION ON" : "ENABLE AUTO"}
           </button>
         </div>
       </div>
 
       <div className="row g-4">
-        {/* --- LEFT COLUMN: PENDING QUEUE --- */}
+        {/* Intelligence Queue */}
         <div className="col-lg-8">
           <div className="bg-dark border border-secondary p-4 h-100">
             <div className="d-flex align-items-center gap-2 mb-4">
@@ -89,46 +88,40 @@ const AdminPanel = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {pendingNews?.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="border-bottom border-secondary-subtle"
-                    >
-                      <td className="small fw-bold text-success">
-                        {item.source}
-                      </td>
-                      <td>
-                        <div className="fw-bold text-uppercase small">
-                          {item.title}
-                        </div>
-                        <div className="x-small text-secondary">
-                          {safeFormat(item.discoveredAt)} • {item.status}
-                        </div>
-                      </td>
-                      <td className="text-center">
-                        <span
-                          className={`badge rounded-0 ${item.score > 80 ? "bg-danger" : "bg-secondary"}`}
-                        >
-                          {item.score}
-                        </span>
-                      </td>
-                      <td className="text-end">
-                        <button className="btn btn-link text-white p-0 me-2">
-                          <ExternalLink size={16} />
-                        </button>
-                        <button className="btn btn-link text-danger p-0">
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {pendingNews.length === 0 && !isProcessing && (
+                  {pendingNews.length > 0 ? (
+                    pendingNews.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="border-bottom border-secondary-subtle"
+                      >
+                        <td className="small fw-bold text-success">
+                          {item.source}
+                        </td>
+                        <td className="fw-bold small">{item.title}</td>
+                        <td className="text-center">
+                          <span
+                            className={`badge rounded-0 ${item.score > 80 ? "bg-danger" : "bg-secondary"}`}
+                          >
+                            {item.score}
+                          </span>
+                        </td>
+                        <td className="text-end">
+                          <button className="btn btn-link text-white p-0 me-2">
+                            <ExternalLink size={16} />
+                          </button>
+                          <button className="btn btn-link text-danger p-0">
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
                     <tr>
                       <td
                         colSpan={4}
-                        className="text-center py-5 text-secondary fw-bold text-uppercase"
+                        className="text-center py-5 text-secondary fw-bold"
                       >
-                        Queue is empty. Scanning for news...
+                        {isProcessing ? "Scanning feeds..." : "Queue is empty"}
                       </td>
                     </tr>
                   )}
@@ -138,66 +131,42 @@ const AdminPanel = ({
           </div>
         </div>
 
-        {/* --- RIGHT COLUMN: IMPACT ALERTS --- */}
+        {/* Impact Alerts */}
         <div className="col-lg-4">
-          <div className="bg-dark border border-secondary p-4">
+          <div className="bg-dark border border-secondary p-4 h-100">
             <div className="d-flex align-items-center gap-2 mb-4">
               <Bell className="text-success" size={20} />
               <h3 className="fw-black text-uppercase italic mb-0 h4">
                 Impact Alerts
               </h3>
             </div>
-
-            <div className="d-flex flex-column gap-3">
-              {notifications?.map((note) => (
-                <div
-                  key={note.id}
-                  className="p-3 border-start border-success bg-black border-2"
-                >
-                  <div className="d-flex justify-content-between mb-2">
-                    <span className="x-small fw-black text-success text-uppercase tracking-widest">
-                      {note.player}
-                    </span>
-                    <span className="x-small text-secondary">
-                      {note.timestamp}
-                    </span>
-                  </div>
-                  <h6 className="fw-black text-uppercase small mb-2">
-                    {note.title}
-                  </h6>
-                  <p
-                    className="x-small text-secondary mb-0"
-                    style={{ lineHeight: "1.4" }}
-                  >
-                    {note.explanation}
-                  </p>
-                </div>
-              ))}
+            <div className="p-3 border-start border-success bg-black border-2 text-secondary small">
+              No alerts at the moment
             </div>
           </div>
         </div>
       </div>
 
-      {/* --- RECENTLY PUBLISHED (Live Articles) --- */}
+      {/* Live Database - Show more articles */}
       <div className="mt-5">
-        <h3 className="fw-black text-uppercase italic mb-4">Live Database</h3>
+        <h3 className="fw-black text-uppercase italic mb-4">
+          Live Database ({articles.length} articles)
+        </h3>
         <div className="row g-3">
-          {(articles || []).slice(0, 4).map((article) => (
-            <div key={article.id} className="col-md-3">
-              <div className="bg-dark p-3 border border-secondary d-flex justify-content-between align-items-center h-100">
-                <div className="text-truncate me-2">
-                  <div className="fw-bold text-uppercase x-small text-truncate">
-                    {article.title}
-                  </div>
-                  <div className="x-small text-secondary">
-                    ID: {article.id?.toString().slice(0, 8)}
-                  </div>
+          {(articles || []).map((article) => (
+            <div key={article.id} className="col-md-6 col-lg-4 col-xl-3">
+              <div className="bg-dark p-3 border border-secondary h-100 d-flex flex-column">
+                <div className="fw-bold text-white mb-2 line-clamp-2">
+                  {article.title}
+                </div>
+                <div className="text-secondary x-small mb-3">
+                  {article.eventType} • {safeFormat(article.publishedAt)}
                 </div>
                 <button
                   onClick={() => onDelete(article.id)}
-                  className="btn btn-link text-danger p-0"
+                  className="btn btn-sm btn-outline-danger mt-auto"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} className="me-1" /> Delete
                 </button>
               </div>
             </div>

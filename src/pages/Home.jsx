@@ -1,5 +1,6 @@
+// src/pages/Home.jsx - Optimized
 import { MessageSquare, Search, Send } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import ArticleCard from "../components/common/ArticleCard";
 
@@ -8,7 +9,6 @@ export default function Home({ articles = [] }) {
   const [leagueSearch, setLeagueSearch] = useState("");
   const [selectedLeague, setSelectedLeague] = useState("Premier League");
 
-  // --- RESTRUCTURED LEAGUE DATA ---
   const leagueData = [
     {
       name: "Premier League",
@@ -36,38 +36,38 @@ export default function Home({ articles = [] }) {
     },
   ];
 
-  // 1. FILTER LOGIC FOR SEARCH
-  const filteredLeagues = leagueData.filter((l) =>
-    l.name.toLowerCase().includes(leagueSearch.toLowerCase()),
+  // Memoized league filtering
+  const filteredLeagues = useMemo(
+    () =>
+      leagueData.filter((l) =>
+        l.name.toLowerCase().includes(leagueSearch.toLowerCase()),
+      ),
+    [leagueSearch],
   );
 
-  // Get current league object based on selection
   const currentLeague =
     leagueData.find((l) => l.name === selectedLeague) || leagueData[0];
 
-  const activeLeague = leagueData.find((l) => l.name === selectedLeague);
+  // Memoized article filtering for tabs
+  const filteredUpdates = useMemo(() => {
+    if (activeTab === "all") return articles;
 
-  // 2. ARTICLE FILTERING
-  const filteredUpdates = articles.filter((a) => {
-    if (activeTab === "all") return true;
-    return a.eventType.toLowerCase().includes(activeTab.toLowerCase());
-  });
+    const tab = activeTab.toLowerCase();
+    return articles.filter((a) => {
+      const event = (a.eventType || "").toLowerCase();
+      return event.includes(tab) || event === tab;
+    });
+  }, [articles, activeTab]);
 
-  const filteredTeams =
-    activeLeague?.teams.filter((team) =>
-      team.name.toLowerCase().includes(leagueSearch.toLowerCase()),
-    ) || [];
-
-  if (!articles || !Array.isArray(articles)) return null;
-
-  const trendingArticles =
-    articles.filter((a) => a.isTrending).length > 0
-      ? articles.filter((a) => a.isTrending).slice(0, 3)
-      : articles.slice(0, 3);
+  const trendingArticles = useMemo(
+    () =>
+      articles.filter((a) => a.isTrending).slice(0, 3) || articles.slice(0, 3),
+    [articles],
+  );
 
   return (
     <div className="bg-black min-vh-100">
-      {/* --- HERO CAROUSEL SECTION --- */}
+      {/* Hero Carousel */}
       <section className="container-fluid px-0 mb-5">
         <div
           id="heroCarousel"
@@ -83,15 +83,7 @@ export default function Home({ articles = [] }) {
                 data-bs-target="#heroCarousel"
                 data-bs-slide-to={index}
                 className={index === 0 ? "active" : ""}
-                style={{
-                  width: "12px",
-                  height: "12px",
-                  borderRadius: "0",
-                  backgroundColor: "#198754",
-                  border: "2px solid black",
-                  margin: "0 6px",
-                }}
-              ></button>
+              />
             ))}
           </div>
           <div className="carousel-inner">
@@ -104,7 +96,7 @@ export default function Home({ articles = [] }) {
                 <div
                   className="position-absolute w-100 h-100 bg-gradient-to-t from-black via-black/40 to-transparent"
                   style={{ zIndex: 1 }}
-                ></div>
+                />
                 <img
                   src={article.imageUrl}
                   className="d-block w-100 h-100 object-fit-cover"
@@ -141,16 +133,15 @@ export default function Home({ articles = [] }) {
         </div>
       </section>
 
-      {/* --- MAIN CONTENT GRID --- */}
+      {/* Main Content */}
       <div className="container py-4">
         <div className="row g-4">
-          {/* Left Column: Feed */}
+          {/* Left Column - Feed */}
           <div className="col-12 col-lg-8">
-            {/* Header with Category Tabs */}
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 gap-3">
               <h2
                 className="display-4 fw-black text-uppercase italic tracking-tighter mb-0"
-                style={{ fontFamily: "'Anton', sans-serif", lineHeight: "0.8" }}
+                style={{ fontFamily: "'Anton', sans-serif" }}
               >
                 Latest <span className="text-success">Updates</span>
               </h2>
@@ -172,7 +163,7 @@ export default function Home({ articles = [] }) {
               </div>
             </div>
 
-            <div className="row g-3">
+            <div className="row g-4">
               {filteredUpdates.length > 0 ? (
                 filteredUpdates.slice(0, 6).map((article) => (
                   <div key={article.id} className="col-md-4">
@@ -182,30 +173,25 @@ export default function Home({ articles = [] }) {
               ) : (
                 <div className="col-12 text-center py-5 border border-secondary border-dashed">
                   <p className="text-secondary fw-bold text-uppercase tracking-widest mb-0">
-                    No {activeTab} news yet <br /> Check back soon or try
-                    another tab
+                    No {activeTab} news yet
                   </p>
                 </div>
               )}
             </div>
-            {/* Bottom of Left Column Feed */}
+
             <div className="mt-5 text-center">
               <Link
                 to="/news"
-                className="btn btn-outline-success rounded-0 px-5 py-3 text-uppercase fw-black italic tracking-widest w-50 transition-all hover-bg-success hover-text-black"
-                style={{
-                  fontFamily: "'Anton', sans-serif",
-                  borderWidth: "2px",
-                }}
+                className="btn btn-outline-success rounded-0 px-5 py-3 text-uppercase fw-black italic tracking-widest w-50"
               >
-                load more News
+                Load More News
               </Link>
             </div>
           </div>
 
-          {/* Right Column: Sidebar */}
+          {/* Right Sidebar */}
           <div className="col-12 col-lg-4">
-            {/* League Table Mock */}
+            {/* League Table */}
             <div className="card bg-dark border-0 rounded-0 mb-5 overflow-hidden shadow-lg">
               <div className="card-header bg-success border-0 py-3 px-4">
                 <div className="d-flex align-items-center justify-content-between mb-2">
@@ -218,42 +204,21 @@ export default function Home({ articles = [] }) {
                   <input
                     type="text"
                     className="form-control form-control-sm bg-black bg-opacity-25 border-0 text-black placeholder-dark rounded-0 fw-bold"
-                    placeholder="Search League (e.g. La Liga)..."
+                    placeholder="Search League..."
                     value={leagueSearch}
                     onChange={(e) => setLeagueSearch(e.target.value)}
                   />
-                  {leagueSearch && (
-                    <div className="position-absolute top-100 start-0 w-100 bg-dark shadow-xl z-50 mt-1 border border-secondary">
-                      {filteredLeagues.map((l) => (
-                        <button
-                          key={l.name}
-                          className="btn btn-dark w-100 text-start rounded-0 border-0 border-bottom border-secondary py-2 small fw-bold text-success"
-                          onClick={() => {
-                            setSelectedLeague(l.name);
-                            setLeagueSearch("");
-                          }}
-                        >
-                          {l.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
 
               <div className="card-body p-0">
                 <table className="table table-dark table-hover mb-0 small">
                   <thead>
-                    <tr
-                      className="text-secondary"
-                      style={{
-                        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-                      }}
-                    >
-                      <th className="ps-4 border-0 opacity-50">#</th>
-                      <th className="border-0 opacity-50">Team</th>
-                      <th className="border-0 opacity-50 text-center">P</th>
-                      <th className="pe-4 border-0 text-end opacity-50">Pts</th>
+                    <tr className="text-secondary">
+                      <th className="ps-4">#</th>
+                      <th>Team</th>
+                      <th className="text-center">P</th>
+                      <th className="pe-4 text-end">Pts</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -262,35 +227,18 @@ export default function Home({ articles = [] }) {
                         key={team.name}
                         className="border-bottom border-secondary border-opacity-10"
                       >
-                        <td className="ps-4 align-middle text-secondary fw-bold">
+                        <td className="ps-4 text-secondary fw-bold">
                           {String(idx + 1).padStart(2, "0")}
                         </td>
-                        <td className="py-3">
-                          <span className="fw-bold d-block text-white mb-0">
-                            {team.name}
-                          </span>
-                          {/* <span className="text-success fw-black text-uppercase x-small tracking-widest">
-                            {selectedLeague}
-                          </span> */}
-                        </td>
-                        <td className="align-middle text-center fw-bold">
-                          {team.p}
-                        </td>
-                        <td className="pe-4 align-middle text-end fw-black text-success fs-6">
+                        <td className="py-3 fw-bold">{team.name}</td>
+                        <td className="text-center fw-bold">{team.p}</td>
+                        <td className="pe-4 text-end fw-black text-success fs-6">
                           {team.pts}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
-              <div className="card-footer bg-transparent border-top border-secondary text-center py-3">
-                <Link
-                  to="/"
-                  className="text-success text-decoration-none x-small fw-black text-uppercase tracking-widest"
-                >
-                  Full Standings &rarr;
-                </Link>
               </div>
             </div>
 

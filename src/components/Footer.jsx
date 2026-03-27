@@ -1,3 +1,4 @@
+// src/components/Footer.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 import { Zap } from "lucide-react";
@@ -6,19 +7,18 @@ const Footer = () => {
   return (
     <footer className="bg-dark py-5 mt-5 border-top border-secondary">
       <div className="container text-center">
-        {/* Animated Icon Logo */}
         <Zap className="text-success mb-3" size={32} fill="currentColor" />
         <h2 className="fw-black italic text-uppercase text-success mb-3">
-          FOOTYAI
+          PITCHPLUSE
         </h2>
-        {/* Copyright and Tagline */}
+
         <p className="text-secondary small fw-bold text-uppercase tracking-widest">
-          © 2026 FootyAI News. All Rights Reserved.
+          © 2026 PitchPluse News. All Rights Reserved.
         </p>
         <p className="text-secondary x-small fw-bold text-uppercase tracking-widest opacity-75 mb-4">
           Human-Quality AI Journalism
         </p>
-        {/* Legal & Contact Links */}
+
         <div className="d-flex justify-content-center gap-4 mt-3 small fw-bold text-uppercase tracking-widest opacity-50">
           <Link
             to="/"

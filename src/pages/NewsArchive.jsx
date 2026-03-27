@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import ArticleCard from "../components/common/ArticleCard";
 
 const NewsArchive = ({
@@ -9,24 +9,32 @@ const NewsArchive = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filtered = articles.filter(
-    (a) =>
-      a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.tags.some((t) => t.toLowerCase().includes(searchTerm.toLowerCase())),
-  );
+  // Memoized filtering for better performance
+  const filtered = useMemo(() => {
+    if (!searchTerm.trim()) return articles;
 
-  const { totalPages = 1, hasNext = false, hasPrev = false } = paginationInfo;
+    const term = searchTerm.toLowerCase().trim();
+    return articles.filter(
+      (a) =>
+        a.title?.toLowerCase().includes(term) ||
+        a.tags?.some((t) => t.toLowerCase().includes(term)),
+    );
+  }, [articles, searchTerm]);
+
+  const {
+    totalPages = 1,
+    totalArticles = 0,
+    hasNext = false,
+    hasPrev = false,
+  } = paginationInfo;
 
   const generatePageNumbers = (current, total) => {
     const pages = [];
     const delta = 2;
-    const maxVisible = 4; // how many numbers to show (adjust if you want more/less)
 
     pages.push(1);
 
-    if (current > delta + 2) {
-      pages.push("...");
-    }
+    if (current > delta + 2) pages.push("...");
 
     for (
       let i = Math.max(2, current - delta);
@@ -38,14 +46,15 @@ const NewsArchive = ({
 
     if (current < total - delta - 1) pages.push("...");
 
-    if (total > 1) pages.push(total);
+    if (total > 1 && pages[pages.length - 1] !== total) {
+      pages.push(total);
+    }
 
     return pages;
   };
 
   return (
     <div className="container-fluid bg-black min-vh-100 py-5 px-lg-5">
-      {/* Archive Header */}
       <div className="border-bottom border-secondary pb-4 mb-5">
         <h1
           className="display-3 fw-black text-uppercase italic text-white mb-4"
@@ -54,8 +63,7 @@ const NewsArchive = ({
           Intelligence <span className="text-success">Archive</span>
         </h1>
 
-        {/* Search/Filter Bar */}
-        <div className="row">
+        <div className="row mb-4">
           <div className="col-md-6">
             <input
               type="text"
@@ -66,16 +74,14 @@ const NewsArchive = ({
             />
           </div>
         </div>
-        <p className="text-secondary">
-          {/* Showing {filtered.length} of{" "}
-          {paginationInfo.totalArticles || articles.length} articles */}
+
+        <p className="text-secondary mb-0">
+          Showing {filtered.length} of {totalArticles} articles — Page{" "}
+          {currentPage} of {totalPages}
           {searchTerm && ` (filtered by "${searchTerm}")`}
-          Showing {(currentPage - 1) * 12 + 1}–
-          {Math.min(currentPage * 12, paginationInfo.totalArticles)} articles
         </p>
       </div>
 
-      {/* Results Grid */}
       <div className="row g-4 mb-5">
         {filtered.length > 0 ? (
           filtered.map((article) => (
@@ -89,23 +95,22 @@ const NewsArchive = ({
         ) : (
           <div className="col-12 text-center py-5">
             <h4 className="text-secondary">No articles match your search</h4>
+            <p className="text-muted">
+              Try clearing the filter or changing page
+            </p>
           </div>
         )}
       </div>
 
       {totalPages > 1 && (
-        <div className="d-flex justify-content-center align-items-center gap-4 mt-5">
+        <div className="d-flex justify-content-center align-items-center gap-3 flex-wrap mt-5">
           <button
-            className="btn btn-outline-success rounded-0 px-4"
+            className="btn btn-outline-success rounded-0 px-4 py-2"
             disabled={!hasPrev}
             onClick={() => onPageChange(currentPage - 1)}
           >
             Previous
           </button>
-
-          {/* <span className="text-white fw-bold fs-5">
-            Page {currentPage} of {totalPages}
-          </span> */}
 
           {generatePageNumbers(currentPage, totalPages).map((page, index) => (
             <button
@@ -115,7 +120,7 @@ const NewsArchive = ({
                   ? "btn-success text-black"
                   : "btn-outline-secondary text-white"
               }`}
-              disabled={page === currentPage || page === "..."}
+              disabled={page === "..." || page === currentPage}
               onClick={() => typeof page === "number" && onPageChange(page)}
             >
               {page}
@@ -123,22 +128,11 @@ const NewsArchive = ({
           ))}
 
           <button
-            className="btn btn-outline-success rounded-0 px-4"
+            className="btn btn-outline-success rounded-0 px-4 py-2"
             disabled={!hasNext}
             onClick={() => onPageChange(currentPage + 1)}
           >
             Next
-          </button>
-        </div>
-      )}
-
-      {paginationInfo.hasNext && (
-        <div className="text-center mt-5">
-          <button
-            className="btn btn-success btn-lg px-5 py-3 rounded-0 fw-bold"
-            onClick={() => onPageChange(currentPage + 1)}
-          >
-            Load More Articles
           </button>
         </div>
       )}

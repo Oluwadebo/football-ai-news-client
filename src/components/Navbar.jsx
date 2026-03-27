@@ -1,3 +1,4 @@
+// src/components/Navbar.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
@@ -7,7 +8,6 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
-  // Close mobile menu automatically when the route changes
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location]);
@@ -19,7 +19,7 @@ const Navbar = () => {
     >
       <div className="container">
         <div className="d-flex align-items-center justify-content-between">
-          {/* Logo / Brand */}
+          {/* Logo */}
           <Link
             to="/"
             className="d-flex align-items-center gap-2 text-decoration-none"
@@ -35,7 +35,7 @@ const Navbar = () => {
               className="fw-black text-uppercase italic h3 mb-0 tracking-tighter"
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
-              FOOTYAI
+              PITCHPLUSE
             </span>
           </Link>
 
@@ -76,7 +76,7 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Navigation Menu */}
+        {/* Mobile Menu */}
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div

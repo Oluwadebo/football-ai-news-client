@@ -1,35 +1,29 @@
-import React from "react";
+// src/pages/Category.jsx
+import React, { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import ArticleCard from "../components/common/ArticleCard";
 
-const CategoryPage = ({ articles }) => {
+const Category = ({ articles = [] }) => {
   const { category } = useParams();
 
-  // Updated filter logic to be more flexible (e.g., "club" matches "club-news")
-  // const filteredArticles = articles.filter((article) => {
-  //   const categoryLower = category?.toLowerCase();
-  //   const eventTypeLower = article.eventType?.toLowerCase() || "";
+  const filteredArticles = useMemo(() => {
+    if (!category) return articles;
 
-  //   return (
-  //     eventTypeLower === categoryLower ||
-  //     eventTypeLower.includes(categoryLower) || // This allows "club" to match "club-news"
-  //     article.tags?.some((tag) => tag.toLowerCase() === categoryLower)
-  //   );
-  // });
-  const filteredArticles = (articles || []).filter((article) => {
-    const categoryLower = category?.toLowerCase();
-    // Check eventType, tags, and title for the category keyword
-    const type = article.eventType?.toLowerCase() || "";
-    const tags = article.tags?.map((t) => t.toLowerCase()) || [];
-    const title = article.title?.toLowerCase() || "";
+    const cat = category.toLowerCase().trim();
 
-    return (
-      type === categoryLower ||
-      type.includes(categoryLower) ||
-      tags.includes(categoryLower) ||
-      title.includes(categoryLower)
-    );
-  });
+    return articles.filter((article) => {
+      const type = (article.eventType || "").toLowerCase();
+      const tags = article.tags?.map((t) => t.toLowerCase()) || [];
+      const title = (article.title || "").toLowerCase();
+
+      return (
+        type === cat ||
+        type.includes(cat) ||
+        tags.includes(cat) ||
+        title.includes(cat)
+      );
+    });
+  }, [articles, category]);
 
   return (
     <div className="container py-5">
@@ -48,24 +42,19 @@ const CategoryPage = ({ articles }) => {
         </p>
       </div>
 
-      <div className="row">
+      <div className="row g-4">
         {filteredArticles.length > 0 ? (
           filteredArticles.map((article) => (
-            <ArticleCard key={article.id} article={article} />
+            <div key={article.id} className="col-md-4">
+              <ArticleCard article={article} />
+            </div>
           ))
         ) : (
-          <div className="col-12 py-5 text-center">
-            {/* Debug Info (Only shows if empty) */}
+          <div className="col-12 text-center py-5">
             <h3 className="text-secondary fw-black text-uppercase italic">
               No Reports Found in the {category} Sector
             </h3>
-            <p className="text-muted small">
-              Check if eventType matches the URL parameter.
-            </p>
-            <Link
-              to="/"
-              className="btn btn-outline-success rounded-0 mt-4 fw-black text-uppercase px-4"
-            >
+            <Link to="/" className="btn btn-outline-success rounded-0 mt-4">
               Return Home
             </Link>
           </div>
@@ -75,4 +64,4 @@ const CategoryPage = ({ articles }) => {
   );
 };
 
-export default CategoryPage;
+export default Category;
