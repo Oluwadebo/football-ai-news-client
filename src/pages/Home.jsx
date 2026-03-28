@@ -1,56 +1,90 @@
 // src/pages/Home.jsx - Optimized
-import { MessageSquare, Search, Send } from "lucide-react";
-import { useState, useMemo } from "react";
+import {
+  ChevronDown,
+  Loader2,
+  MessageSquare,
+  Search,
+  Send,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import ArticleCard from "../components/common/ArticleCard";
+import { API_URLS } from "../config/api";
 
 export default function Home({ articles = [] }) {
+  const [standings, setStandings] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
   const [leagueSearch, setLeagueSearch] = useState("");
   const [selectedLeague, setSelectedLeague] = useState("Premier League");
+  const [loading, setLoading] = useState(false);
+  // const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(10);
 
-  const leagueData = [
-    {
-      name: "Premier League",
-      teams: [
-        { pos: "01", name: "Man City", p: 28, pts: 65 },
-        { pos: "02", name: "Arsenal", p: 28, pts: 64 },
-        { pos: "03", name: "Liverpool", p: 28, pts: 63 },
-      ],
-    },
-    {
-      name: "Ligue 1",
-      teams: [
-        { pos: "01", name: "PSG", p: 25, pts: 59 },
-        { pos: "02", name: "Brest", p: 25, pts: 46 },
-        { pos: "03", name: "Monaco", p: 25, pts: 45 },
-      ],
-    },
-    {
-      name: "La Liga",
-      teams: [
-        { pos: "01", name: "Real Madrid", p: 28, pts: 72 },
-        { pos: "02", name: "Girona", p: 28, pts: 65 },
-        { pos: "03", name: "Barcelona", p: 28, pts: 64 },
-      ],
-    },
-  ];
+  const carouselArticles = useMemo(() => {
+    const trending = articles.filter((a) => a.isTrending);
+    const pool = trending.length >= 3 ? trending : articles;
+    console.log(pool.slice(0, 6));
+
+    return pool.slice(0, 6); // Max 6
+  }, [articles]);
 
   // Memoized league filtering
-  const filteredLeagues = useMemo(
-    () =>
-      leagueData.filter((l) =>
-        l.name.toLowerCase().includes(leagueSearch.toLowerCase()),
-      ),
-    [leagueSearch],
-  );
+  // const filteredLeagues = useMemo(
+  //   () =>
+  //     leagueData.filter((l) =>
+  //       l.name.toLowerCase().includes(leagueSearch.toLowerCase()),
+  //     ),
+  //   [leagueSearch],
+  // );
+  const handleSearch = (e) => {
+    if (e) e.preventDefault(); // Prevent page reload if wrapped in form
+    if (leagueSearch.trim()) {
+      setSelectedLeague(leagueSearch); // This triggers the useEffect below
+      setLeagueSearch(""); // Clear input after search
+    }
+  };
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+      // Trigger your search logic here
+      console.log("Searching for:", leagueSearch);
+      // If you have a filter function, call it here
+    }
+  };
 
-  const currentLeague =
-    leagueData.find((l) => l.name === selectedLeague) || leagueData[0];
+  const fetchStandings = async (name) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URLS.standings}/${name}`);
+      // const res = await fetch(`http://localhost:5000/api/standings/${name}`);
+      const data = await res.json();
+      if (data.table) {
+        setStandings(data.table);
+        setVisibleCount(10); // Reset count when league changes
+        console.log(data.table);
+      }
+      // setStandings(data.table);
+    } catch (err) {
+      console.error("Standings error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStandings(selectedLeague);
+  }, [selectedLeague]);
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 10);
+  };
+
+  // const currentLeague =
+  //   leagueData.find((l) => l.name === selectedLeague) || leagueData[0];
 
   // Memoized article filtering for tabs
   const filteredUpdates = useMemo(() => {
-    if (activeTab === "all") return articles;
+    if (activeTab === "all") return articles.slice(6);
 
     const tab = activeTab.toLowerCase();
     return articles.filter((a) => {
@@ -59,11 +93,11 @@ export default function Home({ articles = [] }) {
     });
   }, [articles, activeTab]);
 
-  const trendingArticles = useMemo(
-    () =>
-      articles.filter((a) => a.isTrending).slice(0, 3) || articles.slice(0, 3),
-    [articles],
-  );
+  // const trendingArticles = useMemo(
+  //   () =>
+  //     articles.filter((a) => a.isTrending).slice(0, 3) || articles.slice(0, 3),
+  //   [articles],
+  // );
 
   return (
     <div className="bg-black min-vh-100">
@@ -76,7 +110,7 @@ export default function Home({ articles = [] }) {
           data-bs-interval="4000"
         >
           <div className="carousel-indicators mb-4">
-            {trendingArticles.map((_, index) => (
+            {carouselArticles.map((_, index) => (
               <button
                 key={index}
                 type="button"
@@ -87,7 +121,7 @@ export default function Home({ articles = [] }) {
             ))}
           </div>
           <div className="carousel-inner">
-            {trendingArticles.map((article, index) => (
+            {carouselArticles.map((article, index) => (
               <div
                 key={article.id}
                 className={`carousel-item ${index === 0 ? "active" : ""}`}
@@ -101,6 +135,15 @@ export default function Home({ articles = [] }) {
                   src={article.imageUrl}
                   className="d-block w-100 h-100 object-fit-cover"
                   alt={article.title}
+                  onError={(e) => {
+                    e.target.src =
+                      "https://via.placeholder.com/1200x675?text=PitchPulse+News";
+                  }}
+                  style={{
+                    objectFit: "cover",
+                    height: "500px",
+                    filter: "brightness(0.6)", // Makes text more readable
+                  }}
                 />
                 <div
                   className="carousel-caption text-start start-0 end-0 px-4 px-md-5 pb-5"
@@ -116,7 +159,7 @@ export default function Home({ articles = [] }) {
                     >
                       {article.title}
                     </h1>
-                    <p className="lead fw-bold text-white-50 mb-4 d-none d-md-block max-w-2xl">
+                    <p className="lead  text-white-50 mb-4 d-none d-md-block max-w-2xl">
                       {article.summary}
                     </p>
                     <Link
@@ -137,7 +180,7 @@ export default function Home({ articles = [] }) {
       <div className="container py-4">
         <div className="row g-4">
           {/* Left Column - Feed */}
-          <div className="col-12 col-lg-8">
+          <div className="col-12 col-lg-7">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 gap-3">
               <h2
                 className="display-4 fw-black text-uppercase italic tracking-tighter mb-0"
@@ -172,7 +215,7 @@ export default function Home({ articles = [] }) {
                 ))
               ) : (
                 <div className="col-12 text-center py-5 border border-secondary border-dashed">
-                  <p className="text-secondary fw-bold text-uppercase tracking-widest mb-0">
+                  <p className="text-secondary  text-uppercase tracking-widest mb-0">
                     No {activeTab} news yet
                   </p>
                 </div>
@@ -190,56 +233,102 @@ export default function Home({ articles = [] }) {
           </div>
 
           {/* Right Sidebar */}
-          <div className="col-12 col-lg-4">
+          <div className="col-12 col-lg-5">
             {/* League Table */}
             <div className="card bg-dark border-0 rounded-0 mb-5 overflow-hidden shadow-lg">
               <div className="card-header bg-success border-0 py-3 px-4">
                 <div className="d-flex align-items-center justify-content-between mb-2">
-                  <h6 className="mb-0 fw-black text-uppercase italic text-black">
-                    {selectedLeague}
+                  <h6 className="mb-0  text-uppercase italic text-white">
+                    Live Standings: {selectedLeague}
                   </h6>
-                  <Search size={16} className="text-black opacity-50" />
                 </div>
                 <div className="position-relative">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm bg-black bg-opacity-25 border-0 text-black placeholder-dark rounded-0 fw-bold"
-                    placeholder="Search League..."
-                    value={leagueSearch}
-                    onChange={(e) => setLeagueSearch(e.target.value)}
-                  />
+                  <div className="d-flex">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm bg-black bg-opacity-25 border-0 text-white placeholder-dark rounded-0 w-90"
+                      placeholder="Search league (e.g. La Liga)"
+                      value={leagueSearch}
+                      onChange={(e) => setLeagueSearch(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                    />
+                    <button
+                      className="btn btn-black text-white rounded-0 border-black"
+                      onClick={handleSearch}
+                    >
+                      <Search size={18} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="card-body p-0">
-                <table className="table table-dark table-hover mb-0 small">
-                  <thead>
-                    <tr className="text-secondary">
-                      <th className="ps-4">#</th>
-                      <th>Team</th>
-                      <th className="text-center">P</th>
-                      <th className="pe-4 text-end">Pts</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentLeague.teams.map((team, idx) => (
-                      <tr
-                        key={team.name}
-                        className="border-bottom border-secondary border-opacity-10"
-                      >
-                        <td className="ps-4 text-secondary fw-bold">
-                          {String(idx + 1).padStart(2, "0")}
-                        </td>
-                        <td className="py-3 fw-bold">{team.name}</td>
-                        <td className="text-center fw-bold">{team.p}</td>
-                        <td className="pe-4 text-end fw-black text-success fs-6">
-                          {team.pts}
-                        </td>
+              {loading ? (
+                <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                  <Loader2 className="animate-spin text-primary" size={40} />
+                  <p className=" mt-2 text-uppercase small">
+                    {selectedLeague} Table...
+                  </p>
+                </div>
+              ) : (
+                <div className="card-body p-0">
+                  <table className="table table-dark table-hover mb-0 small">
+                    <thead>
+                      <tr className="text-secondary">
+                        <th className="ps-3 text-center">#</th>
+                        <th>Team</th>
+                        <th className="text-center">P</th>
+                        <th className="text-center">W</th>
+                        <th className="text-center">D</th>
+                        <th className="text-center">L</th>
+                        <th className="text-center">GF</th>
+                        <th className="text-center">GA</th>
+                        <th className="text-center">GD</th>
+                        <th className="pe-3 text-end">PTS</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {standings.slice(0, visibleCount).map((team, idx) => (
+                        <tr
+                          key={team.pos}
+                          className="border-bottom border-secondary border-opacity-10"
+                        >
+                          <td className="ps-4 text-secondary text-center">
+                            {String(idx + 1).padStart(2, "0")}
+                          </td>
+                          <td className="d-flex align-items-center gap-2 py-3 ">
+                            <img src={team.logo} width="20" alt="" />
+                            <span
+                              className="text-truncate"
+                              style={{ maxWidth: "100px" }}
+                            >
+                              {team.name}
+                            </span>
+                          </td>
+                          <td className="text-center">{team.p}</td>
+                          <td className="text-center small">{team.w}</td>{" "}
+                          <td className="text-center small">{team.d}</td>{" "}
+                          <td className="text-center small">{team.l}</td>{" "}
+                          <td className="text-center x-small">{team.gf}</td>{" "}
+                          <td className="text-center x-small ">{team.ga}</td>{" "}
+                          <td className="text-center small">{team.gd}</td>
+                          <td className="pe-3 text-end text-primary">
+                            {team.pts}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {visibleCount < standings.length && (
+                    <button
+                      onClick={handleLoadMore}
+                      // className="btn btn-black w-100 text-white rounded-0 mt-2 fw-black text-uppercase d-flex align-items-center justify-content-center gap-2"
+                      className="btn btn-outline-success rounded-0 px-5 py-3 text-uppercase align-items-center justify-content-center text-white italic tracking-widest w-100 gap-2"
+                    >
+                      Load More <ChevronDown size={16} />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* RUMORS SECTION */}
@@ -248,7 +337,7 @@ export default function Home({ articles = [] }) {
                 <MessageSquare size={20} /> Wire Rumors
               </h4>
               <div className="small border-start border-warning border-3 ps-3 py-1 mb-3">
-                <p className="mb-1 fw-bold">
+                <p className="mb-1 ">
                   Bayern Munich preparing €90m package for Theo Hernandez.
                 </p>
                 <span className="x-small text-secondary text-uppercase tracking-widest">
@@ -262,13 +351,13 @@ export default function Home({ articles = [] }) {
               <h4 className="fw-black text-uppercase italic mb-2">
                 Extra Time
               </h4>
-              <p className="small fw-bold mb-3">
+              <p className="small  mb-3">
                 Get the technical briefing in your inbox at 06:00 UTC.
               </p>
               <div className="input-group">
                 <input
                   type="email"
-                  className="form-control rounded-0 border-black bg-transparent placeholder-dark text-black fw-bold"
+                  className="form-control rounded-0 border-black bg-transparent placeholder-dark text-black "
                   placeholder="Email"
                 />
                 <button className="btn btn-dark rounded-0 px-3">

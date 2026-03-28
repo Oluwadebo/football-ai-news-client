@@ -2,7 +2,7 @@
 
 const API_BASE_URL =
   process.env.NODE_ENV === "production"
-    ? "" // ← Change this when deploying
+    ? "https://football-ai-news-server.onrender.com" // ← Change this when deploying
     : "http://localhost:5000";
 
 export const API_URLS = {
@@ -12,6 +12,7 @@ export const API_URLS = {
   adminRunNow: `${API_BASE_URL}/api/admin/run-now`,
   toggleAutomation: `${API_BASE_URL}/api/admin/toggle-automation`,
   pending: `${API_BASE_URL}/api/admin/pending`,
+  standings: `${API_BASE_URL}/api/standings`,
 };
 
 export default API_BASE_URL;
