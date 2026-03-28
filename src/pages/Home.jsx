@@ -36,13 +36,20 @@ export default function Home({ articles = [] }) {
   //     ),
   //   [leagueSearch],
   // );
+  // const handleSearch = (e) => {
+  //   if (e) e.preventDefault(); // Prevent page reload if wrapped in form
+  //   if (leagueSearch.trim()) {
+  //     setSelectedLeague(leagueSearch); // This triggers the useEffect below
+  //     setLeagueSearch(""); // Clear input after search
+  //   }
+  // };
   const handleSearch = (e) => {
-    if (e) e.preventDefault(); // Prevent page reload if wrapped in form
-    if (leagueSearch.trim()) {
-      setSelectedLeague(leagueSearch); // This triggers the useEffect below
-      setLeagueSearch(""); // Clear input after search
+    if (e.key === "Enter") {
+      setSelectedLeague(leagueSearch); // This triggers the useEffect
+      setLeagueSearch(""); // Reset input
     }
   };
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       handleSearch();
@@ -250,7 +257,7 @@ export default function Home({ articles = [] }) {
                       placeholder="Search league (e.g. La Liga)"
                       value={leagueSearch}
                       onChange={(e) => setLeagueSearch(e.target.value)}
-                      onKeyDown={handleKeyDown}
+                      onKeyDown={handleSearch}
                     />
                     <button
                       className="btn btn-black text-white rounded-0 border-black"
