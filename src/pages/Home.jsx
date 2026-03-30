@@ -11,6 +11,14 @@ import { Link } from "react-router-dom";
 import ArticleCard from "../components/common/ArticleCard";
 import { API_URLS } from "../config/api";
 
+const getImageUrl = (url) => {
+  if (!url)
+    return "https://placehold.co/1200x675/000000/FFFFFF?text=PitchPulse";
+
+  // Since we wiped the DB, we know all new URLs are full paths
+  return url.trim();
+};
+
 export default function Home({ articles = [] }) {
   const [standings, setStandings] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
@@ -19,30 +27,30 @@ export default function Home({ articles = [] }) {
   const [loading, setLoading] = useState(false);
   // const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(10);
+  // const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // const carouselRef = useRef(null);
 
   const carouselArticles = useMemo(() => {
-    const trending = articles.filter((a) => a.isTrending);
-    const pool = trending.length >= 3 ? trending : articles;
-    console.log(pool.slice(0, 6));
+    // Simply take the latest 6 articles from the array
+    // (Assuming your API already sorts them by date)
+    console.log(articles.slice(0, 6));
 
-    return pool.slice(0, 6); // Max 6
+    return articles.slice(0, 6);
   }, [articles]);
 
-  // Memoized league filtering
-  // const filteredLeagues = useMemo(
-  //   () =>
-  //     leagueData.filter((l) =>
-  //       l.name.toLowerCase().includes(leagueSearch.toLowerCase()),
-  //     ),
-  //   [leagueSearch],
-  // );
-  // const handleSearch = (e) => {
-  //   if (e) e.preventDefault(); // Prevent page reload if wrapped in form
-  //   if (leagueSearch.trim()) {
-  //     setSelectedLeague(leagueSearch); // This triggers the useEffect below
-  //     setLeagueSearch(""); // Clear input after search
-  //   }
-  // };
+
+
+  useEffect(() => {
+    if (carouselArticles.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % carouselArticles.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [carouselArticles.length]);
+
   const handleSearch = (e) => {
     if (e.key === "Enter") {
       setSelectedLeague(leagueSearch); // This triggers the useEffect
@@ -50,14 +58,14 @@ export default function Home({ articles = [] }) {
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-      // Trigger your search logic here
-      console.log("Searching for:", leagueSearch);
-      // If you have a filter function, call it here
-    }
-  };
+  // const handleKeyDown = (e) => {
+  //   if (e.key === "Enter") {
+  //     handleSearch();
+  //     // Trigger your search logic here
+  //     console.log("Searching for:", leagueSearch);
+  //     // If you have a filter function, call it here
+  //   }
+  // };
 
   const fetchStandings = async (name) => {
     setLoading(true);
@@ -91,7 +99,7 @@ export default function Home({ articles = [] }) {
 
   // Memoized article filtering for tabs
   const filteredUpdates = useMemo(() => {
-    if (activeTab === "all") return articles.slice(6);
+    if (activeTab === "all") return articles.slice(1);
 
     const tab = activeTab.toLowerCase();
     return articles.filter((a) => {
@@ -100,20 +108,16 @@ export default function Home({ articles = [] }) {
     });
   }, [articles, activeTab]);
 
-  // const trendingArticles = useMemo(
-  //   () =>
-  //     articles.filter((a) => a.isTrending).slice(0, 3) || articles.slice(0, 3),
-  //   [articles],
-  // );
 
   return (
     <div className="bg-black min-vh-100">
       {/* Hero Carousel */}
+
       <section className="container-fluid px-0 mb-5">
         <div
           id="heroCarousel"
           className="carousel slide carousel-fade"
-          data-bs-ride="carousel"
+          // data-bs-ride="carousel"
           data-bs-interval="4000"
         >
           <div className="carousel-indicators mb-4">
@@ -128,61 +132,100 @@ export default function Home({ articles = [] }) {
             ))}
           </div>
           <div className="carousel-inner">
-            {carouselArticles.map((article, index) => (
-              <div
-                key={article.id}
-                className={`carousel-item ${index === 0 ? "active" : ""}`}
-                style={{ height: "75vh" }}
-              >
+            {carouselArticles.map((article, index) => {
+              const finalUrl = getImageUrl(article.imageUrl);
+              console.log("Image Source:", finalUrl);
+              return (
                 <div
-                  className="position-absolute w-100 h-100 bg-gradient-to-t from-black via-black/40 to-transparent"
-                  style={{ zIndex: 1 }}
-                />
-                <img
-                  src={article.imageUrl}
-                  className="d-block w-100 h-100 object-fit-cover"
-                  alt={article.title}
-                  onError={(e) => {
-                    e.target.src =
-                      "https://via.placeholder.com/1200x675?text=PitchPulse+News";
-                  }}
-                  style={{
-                    objectFit: "cover",
-                    height: "500px",
-                    filter: "brightness(0.6)", // Makes text more readable
-                  }}
-                />
-                <div
-                  className="carousel-caption text-start start-0 end-0 px-4 px-md-5 pb-5"
-                  style={{ zIndex: 2 }}
+                  key={article._id || article.id || index}
+                  className={`carousel-item ${index === 0 ? "active" : ""}`}
+                  style={{ height: "75vh" }}
                 >
-                  <div className="container">
-                    <span className="badge bg-success text-black fw-black text-uppercase mb-3 px-3 py-2">
-                      {article.isTrending ? "Breaking News" : article.eventType}
-                    </span>
-                    <h1
-                      className="display-3 fw-black text-uppercase italic tracking-tighter lh-1 mb-3"
-                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                    >
-                      {article.title}
-                    </h1>
-                    <p className="lead  text-white-50 mb-4 d-none d-md-block max-w-2xl">
-                      {article.summary}
-                    </p>
-                    <Link
-                      to={`/article/${article.id}`}
-                      className="btn btn-success rounded-0 fw-black text-uppercase px-4 py-2"
-                    >
-                      Read full story
-                    </Link>
+                  <div
+                    className="position-absolute w-100 h-100 bg-gradient-to-t from-black via-black/40 to-transparent"
+                    style={{ zIndex: 1 }}
+                  />
+                  <img
+                    // src={article.imageUrl}
+                    // src={getImageUrl(article.imageUrl)}
+                    src={finalUrl}
+                    className="d-block w-100"
+                    alt={article.title}
+                    crossOrigin="anonymous"
+                    // onError={(e) => {
+                    //   e.target.src =
+                    //     "https://placehold.co/1200x675/000000/FFFFFF?text=PitchPulse+News";
+                    // }}
+                    style={{
+                      objectFit: "cover",
+                      height: "500px",
+                      width: "100%",
+                      filter: "brightness(0.6)", // Makes text more readable
+                    }}
+                  />
+                  <div
+                    className="carousel-caption text-start start-0 end-0 px-4 px-md-5 pb-5"
+                    style={{ zIndex: 2 }}
+                  >
+                    <div className="container">
+                      <span className="badge bg-success text-black fw-black text-uppercase mb-3 px-3 py-2">
+                        {article.isTrending
+                          ? "Breaking News"
+                          : article.eventType}
+                      </span>
+                      <h1
+                        className="display-3 fw-black text-uppercase italic tracking-tighter lh-1 mb-3"
+                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                      >
+                        {article.title}
+                      </h1>
+                      <p className="lead  text-white-50 mb-4 d-none d-md-block max-w-2xl">
+                        {article.summary}
+                      </p>
+                      <Link
+                        to={`/article/${article.id}`}
+                        className="btn btn-success rounded-0 fw-black text-uppercase px-4 py-2"
+                      >
+                        Read full story
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
-
+      {/* ) : (
+        <section
+          className="container-fluid px-0 mb-5"
+          style={{ height: "75vh" }}
+        >
+          <div className="d-flex align-items-center justify-content-center h-100 bg-dark">
+            <div className="text-center">
+              <Loader2 className="animate-spin text-success mb-3" size={48} />
+              <p className="text-white text-uppercase tracking-widest">
+                Loading featured stories...
+              </p>
+            </div>
+          </div>
+        </section>
+      )} */}
+      {/* {!hasCarouselData && (
+        <section
+          className="container-fluid px-0 mb-5"
+          style={{ height: "75vh" }}
+        >
+          <div className="d-flex align-items-center justify-content-center h-100 bg-dark">
+            <div className="text-center">
+              <Loader2 className="animate-spin text-success mb-3" size={48} />
+              <p className="text-white text-uppercase tracking-widest">
+                Loading featured stories...
+              </p>
+            </div>
+          </div>
+        </section>
+      )} */}
       {/* Main Content */}
       <div className="container py-4">
         <div className="row g-4">
@@ -272,11 +315,11 @@ export default function Home({ articles = [] }) {
               {loading ? (
                 <div className="d-flex flex-column align-items-center justify-content-center py-5">
                   <Loader2 className="animate-spin text-primary" size={40} />
-                  <p className=" mt-2 text-uppercase small">
+                  <p className=" mt-2 text-uppercase small text-white-50">
                     {selectedLeague} Table...
                   </p>
                 </div>
-              ) : (
+              ) : standings.length > 0 ? (
                 <div className="card-body p-0">
                   <table className="table table-dark table-hover mb-0 small">
                     <thead>
@@ -312,11 +355,11 @@ export default function Home({ articles = [] }) {
                             </span>
                           </td>
                           <td className="text-center">{team.p}</td>
-                          <td className="text-center small">{team.w}</td>{" "}
-                          <td className="text-center small">{team.d}</td>{" "}
-                          <td className="text-center small">{team.l}</td>{" "}
-                          <td className="text-center x-small">{team.gf}</td>{" "}
-                          <td className="text-center x-small ">{team.ga}</td>{" "}
+                          <td className="text-center small">{team.w}</td>
+                          <td className="text-center small">{team.d}</td>
+                          <td className="text-center small">{team.l}</td>
+                          <td className="text-center x-small">{team.gf}</td>
+                          <td className="text-center x-small ">{team.ga}</td>
                           <td className="text-center small">{team.gd}</td>
                           <td className="pe-3 text-end text-primary">
                             {team.pts}
@@ -334,6 +377,27 @@ export default function Home({ articles = [] }) {
                       Load More <ChevronDown size={16} />
                     </button>
                   )}
+                </div>
+              ) : (
+                /* --- 3. FALLBACK: NO DATA STATE --- */
+                <div className="card-body py-5 px-4 text-center border-top border-secondary border-opacity-10">
+                  <div className="mb-3 opacity-20">
+                    <Search size={48} className="text-secondary mx-auto" />
+                  </div>
+                  <h6 className="text-uppercase fw-black italic text-white mb-2">
+                    No Standings Found
+                  </h6>
+                  <p className="small text-secondary mb-0">
+                    We couldn't retrieve the live table for{" "}
+                    <strong>{selectedLeague}</strong>. This is temporarily
+                    unavailable or the league name is incorrect.
+                  </p>
+                  <button
+                    onClick={() => fetchStandings(selectedLeague)}
+                    className="btn btn-link btn-sm text-success text-decoration-none mt-3 text-uppercase fw-bold"
+                  >
+                    please Try Again later
+                  </button>
                 </div>
               )}
             </div>

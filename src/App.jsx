@@ -32,6 +32,8 @@ function App() {
     try {
       const res = await fetch(`${API_URLS.articles}?page=${page}&limit=12`);
       const data = await res.json();
+      console.log(data);
+      
 
       if (res.ok && Array.isArray(data.articles)) {
         setArticles(data.articles);

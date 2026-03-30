@@ -162,3 +162,7 @@ body {
     transform: rotate(360deg);
   }
 }
+.carousel-item {
+  height: 75vh;
+  background-color: #000; /* Fallback color */
+}

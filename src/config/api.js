@@ -5,6 +5,7 @@ const API_BASE_URL = isProduction
   : "http://localhost:5000";
 
 export const API_URLS = {
+  base: API_BASE_URL,
   articles: `${API_BASE_URL}/api/articles`,
   discover: `${API_BASE_URL}/api/discover-news`,
   deleteArticle: (id) => `${API_BASE_URL}/api/articles/${id}`,

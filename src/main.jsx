@@ -1,20 +1,10 @@
-// import { StrictMode } from 'react'
-// import { createRoot } from 'react-dom/client'
-// import './index.css'
-// import App from './App.jsx'
-// import "bootstrap/dist/js/bootstrap.bundle.min.js";
-
-// createRoot(document.getElementById('root')).render(
-//   <StrictMode>
-//     <App />
-//   </StrictMode>,
-// )
-
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css"; // Your custom styles
+// import "./index.css"; // Your custom styles
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import * as bootstrap from "bootstrap";
+window.bootstrap = bootstrap;
 import "./index.css";
 import App from "./App.jsx";
 

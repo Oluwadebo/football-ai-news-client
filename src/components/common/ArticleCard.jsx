@@ -6,6 +6,7 @@ const ArticleCard = ({ article }) => {
   if (!article) return null;
 
   const handleImageError = (e) => {
+    e.target.onerror = null;
     e.target.src = `https://picsum.photos/seed/${article.id || "news"}/400/225`;
   };
 
